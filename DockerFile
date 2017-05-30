@@ -1,0 +1,68 @@
+FROM ubuntu:16.04
+
+# Set non-interactive session
+RUN export DEBIAN_FRONTEND=noninteractive
+# Prepare apt
+RUN apt-get update -y
+
+# Install stuff from here
+
+#Install MySQL: (requires MySQL 5.1+ or 5.5+ for Openclerk 0.12+)
+# Should be moved to a seperate container
+
+ RUN apt-get install mysql-server php5-mysql
+#Install PHP/Apache: (requires PHP 5+)
+
+ RUN apt-get install apache2 php5 php5-mysql php5-curl libapache2-mod-php5 php5-gd
+ RUN a2enmod rewrite
+ RUN service apache2 restart
+ 
+# Install all the build dependencies:
+
+ # install Ruby
+ RUN apt-get install rubygems python-software-properties git
+
+ # install NodeJS, npm
+ RUN add-apt-repository ppa:chris-lea/node.js
+ RUN apt-get update
+ RUN apt-get install nodejs        # also installs npm from latest
+
+ # install Composer, globally
+ RUN curl -sS https://getcomposer.org/installer | php
+ RUN mv composer.phar /usr/local/bin/composer
+
+ RUN gem install sass
+ RUN npm install
+ RUN npm install -g grunt-cli
+ RUN composer install
+ 
+ #Build through Grunt:
+
+ RUN grunt deploy
+
+ #Configure Apache to serve openclerk through the parent directory:
+
+ # TODO: push file into container here
+ # COPY 001-openclerk.conf /etc/apache2/sites-available/001-openclerk.conf
+ # Create a new MySQL database and new MySQL user:
+ # TODO: push sql file into container here and excuete
+ 
+ 
+#Initialise the database:
+
+RUN php -f core/install.php
+#Edit inc/config.php as necessary, or create a config/config.php to overwrite these default configuration options.
+#TODO: move config/config.php into container
+
+#Set up cron jobs to execute the batch/batch_*.php scripts as necessary. Set 'automated_key' to a secure value, and use this as the first parameter when executing PHP scripts via CLI. For example:
+#TODO: add cronjobs
+
+
+
+
+
+
+## clean apt
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+CMD ["/usr/bin/supervisord"]
