@@ -58,11 +58,10 @@ RUN php -f core/install.php
 #TODO: add cronjobs
 
 
-
-
-
-
 ## clean apt
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-CMD ["/usr/bin/supervisord"]
+CMD ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
+
+EXPOSE 80
+EXPOSE 443
